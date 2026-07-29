@@ -4,8 +4,9 @@ import os
 # Adjust path to import from backend
 sys.path.append(os.path.join(os.path.dirname(__file__), "backend"))
 
-import dataset
-from recommendation_engine import RecommendationEngine
+
+from backend import dataset
+from backend.recommendation_engine import RecommendationEngine
 
 def run_tests():
     print("=== STARTING BACKEND INTEGRITY VERIFICATION ===")

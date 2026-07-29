@@ -3,7 +3,10 @@ import re
 import joblib
 import pandas as pd
 import numpy as np
+import warnings
 from sklearn.metrics.pairwise import cosine_similarity
+
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 class RecommendationEngine:
     def __init__(self, model_path="backend/models/recommendation_model.joblib"):
