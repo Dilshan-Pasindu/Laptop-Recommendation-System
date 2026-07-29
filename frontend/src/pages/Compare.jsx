@@ -121,7 +121,7 @@ export default function Compare() {
         setLoading(true);
         try {
           const res = await compareLaptops(id1, id2);
-          setComparisons(res.data.comparisons);
+          setComparisons(res.data);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
       } else {
