@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from recommendation_engine import RecommendationEngine
+from backend.recommendation_engine import RecommendationEngine
 
 # Create a singleton instance of the RecommendationEngine
 engine = RecommendationEngine()

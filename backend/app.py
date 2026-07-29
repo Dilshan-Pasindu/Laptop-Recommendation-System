@@ -1,8 +1,8 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import router
-from train_model import train_recommendation_system
+from backend.routes import router
+from backend.train_model import train_recommendation_system
 
 app = FastAPI(
     title="DP Laptop Advisor API", 

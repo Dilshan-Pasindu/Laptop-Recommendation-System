@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
-from preprocessing import preprocess_dataset
-from feature_engineering import engineer_features
+from backend.preprocessing import preprocess_dataset
+from backend.feature_engineering import engineer_features
 
 def train_recommendation_system(raw_path, clean_path, model_path):
     print("=== STARTING TRAINING PIPELINE ===")
