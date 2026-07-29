@@ -5,7 +5,7 @@ import {
   GitCompare, Search, Sparkles, Check, X,
   ArrowLeftRight, Trophy, ChevronRight, Zap
 } from "lucide-react";
-import { compareLaptops, instantSearch } from "../services/api";
+import { compareLaptops, instantSearch, getLaptopDetails } from "../services/api";
 
 /* ── Search Slot ──────────────────────────────────────────── */
 function LaptopSlot({ slotNum, laptop, query, setQuery, results, showDropdown, onSelect, onClear, accentClass, borderClass }) {
@@ -96,18 +96,36 @@ export default function Compare() {
 
   useEffect(() => {
     (async () => {
+      // Fetch laptop 1
+      if (id1 !== null) {
+        try {
+          const res = await getLaptopDetails(id1);
+          setLaptop1(res.data);
+        } catch (e) { console.error(e); }
+      } else {
+        setLaptop1(null);
+      }
+      
+      // Fetch laptop 2
+      if (id2 !== null) {
+        try {
+          const res = await getLaptopDetails(id2);
+          setLaptop2(res.data);
+        } catch (e) { console.error(e); }
+      } else {
+        setLaptop2(null);
+      }
+
+      // Fetch comparisons if both present
       if (id1 !== null && id2 !== null) {
         setLoading(true);
         try {
           const res = await compareLaptops(id1, id2);
-          setLaptop1(res.data.laptop1); setLaptop2(res.data.laptop2);
           setComparisons(res.data.comparisons);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
       } else {
         setComparisons(null);
-        if (id1 === null) setLaptop1(null);
-        if (id2 === null) setLaptop2(null);
       }
     })();
   }, [id1, id2]);
