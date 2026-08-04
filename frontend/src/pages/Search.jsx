@@ -1,410 +1,455 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search as SearchIcon, SlidersHorizontal, Heart, GitCompare,
   ChevronLeft, ChevronRight, X, Cpu, HardDrive, Battery,
-  Monitor, RotateCcw, Zap, Filter
+  Monitor, RotateCcw, Filter
 } from "lucide-react";
 import { getLaptops, toggleFavorite, getFavorites } from "../services/api";
 
-/* ── Laptop Card ──────────────────────────────────────────── */
+/* ── Laptop Card ────────────────────────────────────────────── */
 function LaptopCard({ laptop, isFav, onFav, onCompare }) {
   const rating = laptop.Overall_Rating ?? 0;
   const ratingColor =
-    rating >= 70 ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/8" :
-    rating >= 50 ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/8" :
-                   "text-slate-400 border-slate-500/30 bg-slate-500/8";
+    rating >= 70 ? { bg: "rgba(52,199,89,0.1)",  text: "#28A745", border: "rgba(52,199,89,0.2)" } :
+    rating >= 50 ? { bg: "rgba(255,149,0,0.1)",  text: "#E05A00", border: "rgba(255,149,0,0.2)" } :
+                   { bg: "rgba(0,0,0,0.04)",      text: "var(--text-secondary)", border: "var(--border-subtle)" };
 
   return (
-    <Link to={`/laptop/${laptop.id}`} className="block group">
+    <Link to={`/laptop/${laptop.id}`} style={{ display: "block", textDecoration: "none" }}>
       <motion.div
         layout
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.97 }}
-        transition={{ duration: 0.3 }}
-        className="laptop-card p-5 h-full flex flex-col"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        className="laptop-card"
+        style={{ padding: "1.125rem", height: "100%", display: "flex", flexDirection: "column" }}
       >
         {/* Brand + Rating */}
-        <div className="flex items-start justify-between mb-3">
-          <span className="badge-purple text-[10px]">{laptop.Brand}</span>
-          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${ratingColor}`}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+          <span className="badge badge-blue" style={{ fontSize: "0.7rem" }}>{laptop.Brand}</span>
+          <span style={{
+            fontSize: "0.7rem", fontWeight: 700,
+            background: ratingColor.bg, color: ratingColor.text,
+            border: `1px solid ${ratingColor.border}`,
+            padding: "0.15rem 0.5rem", borderRadius: 20,
+          }}>
             {Math.round(rating)}/100
           </span>
         </div>
 
         {/* Name */}
-        <h3 className="font-heading text-sm font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-gradient transition-all duration-300 flex-1">
+        <h3 style={{
+          fontSize: "0.8125rem", fontWeight: 600, lineHeight: 1.45,
+          color: "var(--text-primary)", marginBottom: "0.25rem", flex: 1,
+          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+        }}>
           {laptop.Name}
         </h3>
 
         {/* Price */}
-        <p className="text-xl font-black font-heading text-white mt-2 mb-4">
+        <p style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--accent)", marginBottom: "0.875rem", marginTop: "0.5rem" }}>
           ₹{laptop.Price.toLocaleString()}
         </p>
 
-        {/* Specs chips */}
-        <div className="grid grid-cols-2 gap-1.5 mb-4">
+        {/* Spec chips */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.375rem", marginBottom: "0.875rem" }}>
           {[
             { icon: Cpu,       val: `${laptop.RAM_GB} GB RAM` },
             { icon: HardDrive, val: `${laptop.Storage_GB} GB` },
             { icon: Monitor,   val: `${laptop.Display_Size}"` },
             { icon: Battery,   val: `${laptop.Battery_Hours}h` },
           ].map(({ icon: Icon, val }) => (
-            <div key={val} className="flex items-center gap-1.5 bg-white/3 border border-white/5 rounded-lg px-2 py-1.5">
-              <Icon className="h-3 w-3 text-slate-500 shrink-0" />
-              <span className="text-[11px] text-slate-300 truncate">{val}</span>
+            <div key={val} style={{
+              display: "flex", alignItems: "center", gap: "0.375rem",
+              background: "var(--bg-base)", border: "1px solid var(--border-subtle)",
+              borderRadius: 8, padding: "0.375rem 0.5rem",
+            }}>
+              <Icon style={{ width: 11, height: 11, color: "var(--text-tertiary)", flexShrink: 0 }} />
+              <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {val}
+              </span>
             </div>
           ))}
         </div>
 
-        {/* CPU label */}
-        <div className="text-[11px] text-slate-500 truncate mb-4">
-          <Zap className="inline h-3 w-3 mr-1 text-violet-500" />
-          {laptop.Processor_Name}
-        </div>
-
-        {/* Action row */}
-        <div className="flex gap-1.5 mt-auto" onClick={(e) => e.preventDefault()}>
+        {/* Actions */}
+        <div
+          style={{ display: "flex", gap: "0.5rem" }}
+          onClick={(e) => e.preventDefault()}
+        >
           <button
-            onClick={() => onCompare(laptop.id, laptop.Name)}
-            className="btn-ghost text-xs py-1.5 px-2.5 flex-1 border border-white/6 hover:border-cyan-500/30 hover:text-cyan-300"
+            onClick={() => onFav(laptop.id)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 32, height: 32, borderRadius: 8,
+              border: "1px solid var(--border-medium)",
+              background: "var(--bg-base)",
+              color: isFav ? "#FF3B30" : "var(--text-tertiary)",
+              cursor: "pointer", transition: "all 0.15s",
+              flexShrink: 0,
+            }}
+            aria-label="Favourite"
           >
-            <GitCompare className="h-3.5 w-3.5" /> Compare
+            <Heart style={{ width: 13, height: 13 }} fill={isFav ? "#FF3B30" : "none"} />
           </button>
           <button
-            onClick={(e) => onFav(laptop.id, e)}
-            className={`p-1.5 rounded-xl border transition-all ${
-              isFav
-                ? "border-pink-500/40 bg-pink-500/10 text-pink-400"
-                : "border-white/6 text-slate-500 hover:text-pink-400 hover:border-pink-500/30"
-            }`}
+            onClick={() => onCompare(laptop.id)}
+            className="btn-secondary"
+            style={{ flex: 1, fontSize: "0.75rem", padding: "0 0.5rem", height: 32 }}
           >
-            <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
+            <GitCompare style={{ width: 13, height: 13 }} />
+            Compare
           </button>
+          <Link
+            to={`/laptop/${laptop.id}`}
+            className="btn-primary"
+            style={{ flex: 1, fontSize: "0.75rem", padding: "0 0.5rem", height: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            View
+          </Link>
         </div>
       </motion.div>
     </Link>
   );
 }
 
-/* ── Filter Panel ─────────────────────────────────────────── */
-function FilterPanel({ filters, meta, onChange, onClear }) {
-  const fields = [
-    { name: "brand",           label: "Brand",         opts: (meta.brands || []).map((b) => [b, b]) },
-    { name: "purpose",         label: "Purpose",        opts: (meta.purposes || []).map((p) => [p, p]) },
-    { name: "processor_brand", label: "Processor",      opts: (meta.processor_brands || []).map((p) => [p, p]) },
-    { name: "gpu_brand",       label: "GPU Brand",      opts: [["NVIDIA","NVIDIA"],["Intel","Intel"],["AMD","AMD"],["Apple","Apple"],["ARM","ARM"]] },
-    { name: "display_type",    label: "Display Panel",  opts: [["LED","LED"],["LCD","LCD"]] },
-    { name: "min_ram",         label: "Min RAM",        opts: [["4","4 GB"],["8","8 GB"],["16","16 GB"],["32","32 GB"]] },
-    { name: "min_storage",     label: "Min Storage",    opts: [["128","128 GB"],["256","256 GB"],["512","512 GB"],["1024","1 TB"]] },
-  ];
-
-  const activeCount = Object.values(filters).filter((v) => v !== "").length;
+/* ── Filter Panel ──────────────────────────────────────────── */
+function FilterPanel({ filters, meta, onChange, onReset }) {
+  const select = (key, val) => onChange({ ...filters, [key]: val });
 
   return (
-    <div className="glass rounded-2xl border border-violet-500/12 p-5 space-y-5 sticky top-20">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-violet-400" />
-          <span className="font-heading font-bold text-white text-sm">Filters</span>
-          {activeCount > 0 && (
-            <span className="badge-purple text-[10px] px-1.5 py-0.5">{activeCount}</span>
-          )}
-        </div>
-        {activeCount > 0 && (
-          <button onClick={onClear} className="text-[11px] text-slate-500 hover:text-violet-400 transition flex items-center gap-1">
-            <RotateCcw className="h-3 w-3" /> Clear
-          </button>
-        )}
-      </div>
-
-      {/* Price range */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+      {/* Price Range */}
       <div>
         <label className="form-label">Price Range (₹)</label>
-        <div className="flex gap-2">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
           <input
-            type="number" name="price_min" placeholder="Min"
-            value={filters.price_min} onChange={onChange}
-            className="input-field text-xs py-2 px-3"
+            type="number" placeholder="Min" value={filters.price_min || ""}
+            onChange={(e) => select("price_min", e.target.value || undefined)}
+            className="input-field"
+            style={{ fontSize: "0.8125rem", padding: "0.5rem 0.625rem" }}
           />
           <input
-            type="number" name="price_max" placeholder="Max"
-            value={filters.price_max} onChange={onChange}
-            className="input-field text-xs py-2 px-3"
+            type="number" placeholder="Max" value={filters.price_max || ""}
+            onChange={(e) => select("price_max", e.target.value || undefined)}
+            className="input-field"
+            style={{ fontSize: "0.8125rem", padding: "0.5rem 0.625rem" }}
           />
         </div>
       </div>
 
-      {/* Dynamic selects */}
-      {fields.map(({ name, label, opts }) => (
-        <div key={name}>
-          <label className="form-label">{label}</label>
-          <select name={name} value={filters[name]} onChange={onChange} className="select-field text-xs py-2">
-            <option value="">All</option>
-            {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-        </div>
-      ))}
+      {/* Brand */}
+      <div>
+        <label className="form-label">Brand</label>
+        <select value={filters.brand || ""} onChange={(e) => select("brand", e.target.value || undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">All Brands</option>
+          {(meta?.brands || []).map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+
+      {/* Processor */}
+      <div>
+        <label className="form-label">Processor</label>
+        <select value={filters.processor_brand || ""} onChange={(e) => select("processor_brand", e.target.value || undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">All</option>
+          {(meta?.processor_brands || []).map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+
+      {/* GPU Brand */}
+      <div>
+        <label className="form-label">GPU Brand</label>
+        <select value={filters.gpu_brand || ""} onChange={(e) => select("gpu_brand", e.target.value || undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">All</option>
+          {["NVIDIA", "AMD", "Intel", "Apple"].map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+
+      {/* Purpose */}
+      <div>
+        <label className="form-label">Purpose</label>
+        <select value={filters.purpose || ""} onChange={(e) => select("purpose", e.target.value || undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">Any Purpose</option>
+          {["Programming","AI Development","Gaming","Video Editing","Student","Office"].map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+      </div>
+
+      {/* Min RAM */}
+      <div>
+        <label className="form-label">Min RAM</label>
+        <select value={filters.min_ram || ""} onChange={(e) => select("min_ram", e.target.value ? parseInt(e.target.value) : undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">Any</option>
+          {[4, 8, 16, 32, 64].map((r) => <option key={r} value={r}>{r} GB</option>)}
+        </select>
+      </div>
+
+      {/* Min Storage */}
+      <div>
+        <label className="form-label">Min Storage</label>
+        <select value={filters.min_storage || ""} onChange={(e) => select("min_storage", e.target.value ? parseInt(e.target.value) : undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">Any</option>
+          {[128, 256, 512, 1024, 2048].map((s) => <option key={s} value={s}>{s >= 1024 ? `${s/1024} TB` : `${s} GB`}</option>)}
+        </select>
+      </div>
+
+      {/* Display Type */}
+      <div>
+        <label className="form-label">Display Type</label>
+        <select value={filters.display_type || ""} onChange={(e) => select("display_type", e.target.value || undefined)} className="select-field" style={{ fontSize: "0.8125rem" }}>
+          <option value="">All</option>
+          <option value="LED">LED</option>
+          <option value="LCD">LCD</option>
+        </select>
+      </div>
+
+      {/* Reset */}
+      <button onClick={onReset} className="btn-secondary" style={{ marginTop: "0.25rem" }}>
+        <RotateCcw style={{ width: 14, height: 14 }} />
+        Reset Filters
+      </button>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   SEARCH & BROWSE PAGE
+════════════════════════════════════════════════════════════ */
+const EMPTY_FILTERS = {};
+
 export default function SearchBrowse() {
   const navigate = useNavigate();
-  const [query,   setQuery]   = useState("");
-  const [page,    setPage]    = useState(1);
-  const [data,    setData]    = useState({ laptops: [], total: 0, pages: 0, meta: {} });
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState({ laptops: [], total: 0, pages: 0 });
   const [loading, setLoading] = useState(true);
-  const [favs,    setFavs]    = useState([]);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [meta, setMeta] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const [filters, setFilters] = useState({
-    brand: "", processor_brand: "", gpu_brand: "", display_type: "",
-    price_min: "", price_max: "", min_ram: "", min_storage: "", purpose: "",
-  });
-
-  const loadLaptops = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true);
     try {
-      const active = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ""));
-      const res    = await getLaptops({ page, limit: 12, q: query || undefined, ...active });
-      setData(res.data);
+      const res = await getLaptops({ q: query || undefined, ...filters, page, limit: 12 });
+      setData({ laptops: res.data.laptops || [], total: res.data.total || 0, pages: res.data.pages || 0 });
+      if (res.data.meta && !meta) setMeta(res.data.meta);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
+  }, [query, filters, page]);
 
-  useEffect(() => { loadLaptops(); }, [page, filters]);
+  useEffect(() => { fetch(); }, [fetch]);
+
   useEffect(() => {
-    getFavorites().then((r) => setFavs(r.data.map((i) => i.id))).catch(console.error);
+    getFavorites().then((r) => setFavorites((r.data || []).map((f) => f.id))).catch(() => {});
   }, []);
 
-  const handleSearch = (e) => { e.preventDefault(); setPage(1); loadLaptops(); };
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((p) => ({ ...p, [name]: value }));
-    setPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setFilters({ brand:"", processor_brand:"", gpu_brand:"", display_type:"", price_min:"", price_max:"", min_ram:"", min_storage:"", purpose:"" });
-    setQuery(""); setPage(1);
-  };
-
-  const handleFav = async (id, e) => {
-    e.preventDefault();
+  const handleFav = async (id) => {
     try {
       const r = await toggleFavorite(id);
-      setFavs((p) => r.data.status === "added" ? [...p, id] : p.filter((x) => x !== id));
-    } catch { /* noop */ }
+      setFavorites(r.data.favorites || []);
+    } catch (e) { console.error(e); }
   };
 
-  const handleCompare = (id, name) => {
+  const handleCompare = (id) => {
     localStorage.setItem("compare_id1", id);
-    localStorage.setItem("compare_name1", name);
     navigate("/compare");
   };
 
-  const { laptops, total, pages, meta } = data;
-  const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPage(1);
+    fetch();
+  };
+
+  const resetFilters = () => { setFilters(EMPTY_FILTERS); setPage(1); };
+
+  const activeFilterCount = Object.keys(filters).filter((k) => filters[k] !== undefined && filters[k] !== "").length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
-        <div>
-          <h1 className="font-heading text-4xl font-black text-white md:text-5xl">
-            Search & <span className="text-gradient">Browse</span>
-          </h1>
-          <p className="mt-2 text-slate-400">
-            {total ? `${total.toLocaleString()} laptops` : "3,976 laptops"} — filter by specs, brand, or purpose
-          </p>
-        </div>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
 
-        {/* Mobile filter button */}
+      {/* ── Page Header ── */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.25rem" }}>
+          Search &amp; <span className="text-gradient">Browse</span>
+        </h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.9375rem" }}>
+          {data.total.toLocaleString()} laptops — filter by specs, brand, or purpose
+        </p>
+      </div>
+
+      {/* ── Search Bar ── */}
+      <form onSubmit={handleSearch} style={{ display: "flex", gap: "0.625rem", marginBottom: "1.5rem" }}>
+        <div style={{ position: "relative", flex: 1 }}>
+          <SearchIcon style={{
+            position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)",
+            width: 16, height: 16, color: "var(--text-tertiary)", pointerEvents: "none",
+          }} />
+          <input
+            type="text"
+            placeholder="Search by name, brand, processor…"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+            className="input-field"
+            style={{ paddingLeft: "2.625rem", fontSize: "0.9375rem", height: 44 }}
+          />
+        </div>
+        <button type="submit" className="btn-primary" style={{ height: 44, padding: "0 1.25rem", flexShrink: 0 }}>
+          Search
+        </button>
         <button
-          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-          className={`md:hidden btn-secondary text-sm relative ${activeFilterCount > 0 ? "border-violet-500/40" : ""}`}
+          type="button"
+          onClick={() => setFilterOpen((v) => !v)}
+          className={activeFilterCount > 0 ? "btn-primary" : "btn-secondary"}
+          style={{ height: 44, padding: "0 1rem", flexShrink: 0, position: "relative" }}
         >
-          <Filter className="h-4 w-4" />
+          <SlidersHorizontal style={{ width: 15, height: 15 }} />
           Filters
           {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] flex items-center justify-center font-bold">
+            <span style={{
+              position: "absolute", top: -6, right: -6,
+              width: 18, height: 18, borderRadius: "50%",
+              background: "#FF3B30", color: "#fff",
+              fontSize: "0.65rem", fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
               {activeFilterCount}
             </span>
           )}
         </button>
-      </div>
+      </form>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* ── Sidebar Filters (Desktop) ── */}
-        <div className="hidden lg:block lg:col-span-1">
-          <FilterPanel filters={filters} meta={meta} onChange={handleFilterChange} onClear={handleClearFilters} />
-        </div>
+      {/* ── Body: Sidebar + Grid ── */}
+      <div style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}>
 
-        {/* ── Mobile Filter Drawer ── */}
+        {/* Filter Sidebar */}
         <AnimatePresence>
-          {mobileFiltersOpen && (
+          {filterOpen && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden"
-              onClick={() => setMobileFiltersOpen(false)}
+              key="filter-panel"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 280 }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              style={{ flexShrink: 0, overflow: "hidden" }}
             >
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="absolute left-0 top-0 bottom-0 w-72 bg-[#0a0520] border-r border-violet-500/15 p-5 overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <span className="font-heading font-bold text-white">Filters</span>
-                  <button onClick={() => setMobileFiltersOpen(false)} className="btn-ghost p-1.5">
-                    <X className="h-5 w-5" />
+              <div style={{
+                width: 280,
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-lg)",
+                padding: "1.25rem",
+                boxShadow: "var(--shadow-sm)",
+                position: "sticky",
+                top: "calc(var(--nav-h) + 1rem)",
+              }}>
+                {/* Panel header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                    <Filter style={{ width: 15, height: 15, color: "var(--accent)" }} />
+                    Filters
+                  </div>
+                  <button
+                    onClick={() => setFilterOpen(false)}
+                    className="btn-icon"
+                    style={{ width: 26, height: 26 }}
+                  >
+                    <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>
-                <FilterPanel filters={filters} meta={meta} onChange={handleFilterChange} onClear={handleClearFilters} />
-              </motion.div>
+                <FilterPanel filters={filters} meta={meta} onChange={(f) => { setFilters(f); setPage(1); }} onReset={resetFilters} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── Main Content ── */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search by name, brand, processor…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="input-field pl-12 pr-4 py-3.5"
-              />
-              {query && (
-                <button type="button" onClick={() => { setQuery(""); setPage(1); loadLaptops(); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <button type="submit" className="btn-primary px-6 py-3">
-              Search
-            </button>
-          </form>
-
-          {/* Active filter chips */}
-          {activeFilterCount > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(filters).filter(([, v]) => v !== "").map(([k, v]) => (
-                <span key={k} className="badge-purple text-xs flex items-center gap-1.5">
-                  {k.replace(/_/g, " ")}: {v}
-                  <button onClick={() => { setFilters((p) => ({ ...p, [k]: "" })); setPage(1); }}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Results header */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">
-              {loading ? "Searching…" : `Showing ${laptops.length} of ${total?.toLocaleString() || 0} results`}
+        {/* Results grid */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Result count */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginBottom: "1rem", fontSize: "0.8125rem", color: "var(--text-secondary)",
+          }}>
+            <span>
+              <strong style={{ color: "var(--text-primary)" }}>{data.total.toLocaleString()}</strong> results
+              {page > 1 && ` · Page ${page} of ${data.pages}`}
             </span>
-            {pages > 1 && (
-              <span className="text-slate-600">Page {page} of {pages}</span>
+            {activeFilterCount > 0 && (
+              <button onClick={resetFilters} className="btn-ghost" style={{ fontSize: "0.8rem" }}>
+                <X style={{ width: 12, height: 12 }} /> Clear filters
+              </button>
             )}
           </div>
 
-          {/* Grid */}
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="laptop-card p-5 space-y-3">
-                    <div className="skeleton h-4 w-16 rounded" />
-                    <div className="skeleton h-4 w-full rounded" />
-                    <div className="skeleton h-3 w-3/4 rounded" />
-                    <div className="skeleton h-8 w-24 rounded mt-4" />
-                    <div className="grid grid-cols-2 gap-2">
-                      {[1,2,3,4].map((j) => <div key={j} className="skeleton h-8 rounded-lg" />)}
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            ) : laptops.length > 0 ? (
-              <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {laptops.map((laptop) => (
+          {loading ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} style={{
+                  height: 260, borderRadius: "var(--radius-lg)",
+                  background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+                }}>
+                  <div className="skeleton" style={{ height: "100%", borderRadius: "var(--radius-lg)" }} />
+                </div>
+              ))}
+            </div>
+          ) : data.laptops.length === 0 ? (
+            <div style={{
+              textAlign: "center", padding: "4rem 1rem",
+              background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xs)",
+            }}>
+              <SearchIcon style={{ width: 40, height: 40, color: "var(--text-tertiary)", margin: "0 auto 1rem" }} />
+              <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)", marginBottom: "0.4rem" }}>No laptops found</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "1.25rem" }}>
+                Try adjusting your search or filters.
+              </p>
+              <button onClick={resetFilters} className="btn-secondary" style={{ margin: "0 auto" }}>
+                <RotateCcw style={{ width: 14, height: 14 }} /> Reset Filters
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
+              <AnimatePresence mode="popLayout">
+                {data.laptops.map((l) => (
                   <LaptopCard
-                    key={laptop.id}
-                    laptop={laptop}
-                    isFav={favs.includes(laptop.id)}
+                    key={l.id}
+                    laptop={l}
+                    isFav={favorites.includes(l.id)}
                     onFav={handleFav}
                     onCompare={handleCompare}
                   />
                 ))}
-              </motion.div>
-            ) : (
-              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="py-24 text-center glass rounded-3xl border border-white/5">
-                <SearchIcon className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                <h3 className="font-heading text-xl font-bold text-white mb-2">No laptops found</h3>
-                <p className="text-sm text-slate-500 mb-6">Try adjusting your search query or clearing some filters.</p>
-                <button onClick={handleClearFilters} className="btn-secondary text-sm">
-                  <RotateCcw className="h-4 w-4" /> Reset Filters
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Pagination */}
-          {pages > 1 && !loading && (
-            <div className="flex items-center justify-center gap-3 pt-4">
+          {data.pages > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginTop: "2rem" }}>
               <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="btn-secondary text-sm py-2.5 px-4 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="btn-secondary"
+                style={{ padding: "0.5rem 0.875rem", opacity: page === 1 ? 0.4 : 1 }}
               >
-                <ChevronLeft className="h-4 w-4" /> Prev
+                <ChevronLeft style={{ width: 15, height: 15 }} />
+                Prev
               </button>
-
-              {/* Page numbers */}
-              <div className="flex gap-1">
-                {Array.from({ length: Math.min(5, pages) }, (_, i) => {
-                  const pg = Math.max(1, Math.min(pages - 4, page - 2)) + i;
-                  return pg <= pages ? (
-                    <button
-                      key={pg}
-                      onClick={() => { setPage(pg); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      className={`h-9 w-9 rounded-xl text-sm font-semibold font-heading transition-all ${
-                        pg === page
-                          ? "bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]"
-                          : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
-                      }`}
-                    >
-                      {pg}
-                    </button>
-                  ) : null;
-                })}
-              </div>
-
+              <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)", padding: "0 0.75rem" }}>
+                Page <strong style={{ color: "var(--text-primary)" }}>{page}</strong> of {data.pages}
+              </span>
               <button
-                disabled={page === pages}
-                onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="btn-secondary text-sm py-2.5 px-4 disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
+                disabled={page === data.pages}
+                className="btn-secondary"
+                style={{ padding: "0.5rem 0.875rem", opacity: page === data.pages ? 0.4 : 1 }}
               >
-                Next <ChevronRight className="h-4 w-4" />
+                Next
+                <ChevronRight style={{ width: 15, height: 15 }} />
               </button>
             </div>
           )}

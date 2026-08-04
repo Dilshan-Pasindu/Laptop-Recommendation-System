@@ -811,3 +811,29 @@
   font-weight: 600;
 }
 
+
+/* Hero grid responsive */
+.hero-grid {
+  grid-template-columns: 1fr !important;
+}
+@media (min-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .step-connector {
+    display: block !important;
+  }
+}
+
+/* Details page grid */
+@media (min-width: 900px) {
+  .details-grid {
+    grid-template-columns: 1fr 400px !important;
+  }
+  .compare-slots-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .recommend-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

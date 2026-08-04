@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Cpu, HardDrive, ShieldAlert, GitCompare, Heart,
-  Battery, Monitor, Sparkles, ChevronLeft, Zap,
-  MemoryStick, AlertTriangle, CheckCircle, Star
+  Battery, Monitor, Sparkles, ChevronLeft,
+  MemoryStick, AlertTriangle, CheckCircle2, Star
 } from "lucide-react";
 import { getLaptopDetails, toggleFavorite, getFavorites } from "../services/api";
 import {
@@ -12,49 +12,60 @@ import {
   PolarRadiusAxis, Radar
 } from "recharts";
 
-/* ── Score bar with animation ────────────────────────────── */
-function ScoreBar({ label, value, color, delay = 0 }) {
+/* ── Score Bar ──────────────────────────────────────────────── */
+function ScoreBar({ label, value, accent, delay = 0 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), delay * 1000 + 100); return () => clearTimeout(t); }, [delay]);
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-slate-400 font-medium">{label}</span>
-        <span className="text-xs font-bold text-white">{Math.round(value)}/100</span>
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+        <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: accent }}>{Math.round(value)}/100</span>
       </div>
-      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          className={`h-full rounded-full ${color}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 1, ease: "easeOut", delay }}
-        />
+      <div className="progress-track">
+        <div className="progress-fill" style={{ width: mounted ? `${value}%` : "0%", background: accent, transition: "width 0.9s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
     </div>
   );
 }
 
-/* ── Spec row ────────────────────────────────────────────── */
+/* ── Spec Row ───────────────────────────────────────────────── */
 function SpecRow({ icon: Icon, color, label, main, sub }) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/3 border border-white/5 hover:border-violet-500/20 hover:bg-violet-500/4 transition-all duration-200">
-      <div className={`h-10 w-10 rounded-xl ${color} flex items-center justify-center shrink-0`}>
-        <Icon className="h-5 w-5 text-white" strokeWidth={1.8} />
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: "0.875rem",
+      padding: "0.875rem", borderRadius: "var(--radius-md)",
+      background: "var(--bg-base)", border: "1px solid var(--border-subtle)",
+      transition: "all 0.15s",
+    }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-accent)"; e.currentTarget.style.background = "var(--accent-muted)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-subtle)"; e.currentTarget.style.background = "var(--bg-base)"; }}
+    >
+      <div style={{
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+        background: color, display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+      }}>
+        <Icon style={{ width: 18, height: 18, color: "#fff" }} strokeWidth={1.75} />
       </div>
-      <div className="min-w-0">
-        <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-0.5">{label}</div>
-        <div className="text-sm font-bold text-white">{main}</div>
-        {sub && <div className="text-xs text-slate-400 mt-0.5">{sub}</div>}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: "0.6875rem", color: "var(--text-tertiary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--text-primary)" }}>{main}</div>
+        {sub && <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: 1 }}>{sub}</div>}
       </div>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   LAPTOP DETAILS PAGE
+════════════════════════════════════════════════════════════ */
 export default function LaptopDetails() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [laptop,      setLaptop]      = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
+  const [laptop, setLaptop] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
@@ -64,9 +75,8 @@ export default function LaptopDetails() {
         const [detRes, favRes] = await Promise.all([getLaptopDetails(id), getFavorites()]);
         setLaptop(detRes.data);
         setIsFavorited(favRes.data.some((i) => i.id === parseInt(id)));
-      } catch {
-        setError("Could not load laptop details.");
-      } finally { setLoading(false); }
+      } catch { setError("Could not load laptop details."); }
+      finally { setLoading(false); }
     })();
   }, [id]);
 
@@ -79,31 +89,24 @@ export default function LaptopDetails() {
 
   const sendToCompare = () => {
     localStorage.setItem("compare_id1", laptop.id);
-    localStorage.setItem("compare_name1", laptop.Name);
     navigate("/compare");
   };
 
-  /* ── Loading ── */
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-20 flex flex-col items-center justify-center min-h-[50vh]">
-        <div className="spinner mb-4" />
-        <p className="text-slate-400 text-sm">Loading specifications…</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "50vh", gap: "1rem" }}>
+      <div className="spinner" />
+      <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>Loading specifications…</p>
+    </div>
+  );
 
-  /* ── Error ── */
-  if (error || !laptop) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-        <ShieldAlert className="h-14 w-14 text-pink-500 mx-auto mb-4" />
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">Details Not Found</h2>
-        <p className="text-slate-400 text-sm mb-6">{error || "This laptop does not exist in our database."}</p>
-        <Link to="/search" className="btn-primary text-sm">Return to Browse</Link>
-      </div>
-    );
-  }
+  if (error || !laptop) return (
+    <div style={{ maxWidth: 500, margin: "5rem auto", padding: "0 1.25rem", textAlign: "center" }}>
+      <ShieldAlert style={{ width: 40, height: 40, color: "#FF3B30", margin: "0 auto 1rem" }} />
+      <h2 style={{ fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>Details Not Found</h2>
+      <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "1.5rem" }}>{error || "This laptop is not in our database."}</p>
+      <Link to="/search" className="btn-primary">Return to Browse</Link>
+    </div>
+  );
 
   const chartData = [
     { name: "Programming",  score: laptop.Programming_Score },
@@ -114,134 +117,143 @@ export default function LaptopDetails() {
     { name: "Portability",  score: laptop.Portability_Score },
   ];
 
-  const overallColor =
-    laptop.Overall_Rating >= 70 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/25" :
-    laptop.Overall_Rating >= 50 ? "bg-yellow-500/15 text-yellow-300 border-yellow-500/25" :
-                                   "bg-slate-500/15 text-slate-300 border-slate-500/25";
+  const overallRating = laptop.Overall_Rating ?? 0;
+  const ratingColor = overallRating >= 70 ? "#34C759" : overallRating >= 50 ? "#FF9F0A" : "var(--text-tertiary)";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
 
-      {/* ── Back ── */}
-      <button onClick={() => navigate(-1)} className="btn-ghost text-sm gap-1.5">
-        <ChevronLeft className="h-4 w-4" /> Back
+      {/* Back */}
+      <button onClick={() => navigate(-1)} className="btn-ghost" style={{ marginBottom: "1.25rem" }}>
+        <ChevronLeft style={{ width: 16, height: 16 }} /> Back
       </button>
 
-      {/* ── Hero Header ── */}
+      {/* ── Header Card ── */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-3xl p-6 sm:p-8 border border-violet-500/15 relative overflow-hidden"
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-xl)", padding: "1.5rem 2rem",
+          boxShadow: "var(--shadow-md)", marginBottom: "1.5rem",
+          position: "relative", overflow: "hidden",
+        }}
       >
-        {/* BG glow */}
-        <div className="absolute top-0 right-0 h-64 w-64 bg-violet-600/8 rounded-full blur-3xl pointer-events-none" />
+        {/* Top accent */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #34C759)" }} />
 
+        {/* Battery estimation notice */}
         {laptop.Battery_Imputed && (
-          <div className="flex items-start gap-3 border border-yellow-500/25 bg-yellow-500/6 text-yellow-400 px-4 py-3 rounded-2xl text-xs mb-6">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span><strong>Estimation notice:</strong> Battery life ({laptop.Battery_Hours.toFixed(1)}h) has been imputed from price-segment medians due to scraped data errors in the original record.</span>
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: "0.625rem",
+            background: "rgba(255,149,0,0.08)", border: "1px solid rgba(255,149,0,0.2)",
+            borderRadius: "var(--radius-md)", padding: "0.75rem 1rem",
+            marginBottom: "1.25rem",
+          }}>
+            <AlertTriangle style={{ width: 15, height: 15, color: "#FF9F0A", flexShrink: 0, marginTop: 1 }} />
+            <span style={{ fontSize: "0.8125rem", color: "#E05A00", lineHeight: 1.5 }}>
+              <strong>Estimation notice:</strong> Battery life ({laptop.Battery_Hours?.toFixed(1)}h) has been imputed from price-segment medians due to missing data in the original scraped record.
+            </span>
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative">
-          {/* Info */}
-          <div className="space-y-3 flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="badge-purple">{laptop.Brand}</span>
-              <span className={`badge border ${overallColor}`}>
-                <Star className="h-3 w-3 fill-current" /> {laptop.Overall_Rating?.toFixed(1)}/100
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "1.25rem" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.625rem" }}>
+              <span className="badge badge-blue">{laptop.Brand}</span>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                fontSize: "0.75rem", fontWeight: 700,
+                background: `${ratingColor}18`, color: ratingColor,
+                border: `1px solid ${ratingColor}30`,
+                padding: "0.2rem 0.625rem", borderRadius: 20,
+              }}>
+                <Star style={{ width: 11, height: 11 }} fill="currentColor" />
+                {overallRating.toFixed(1)}/100
               </span>
-              {laptop.CPU_Tier && (
-                <span className="badge-cyan">{laptop.CPU_Tier}</span>
-              )}
+              {laptop.CPU_Tier && <span className="badge badge-gray">{laptop.CPU_Tier}</span>}
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-black text-white leading-tight">
+            <h1 style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.5rem", lineHeight: 1.2 }}>
               {laptop.Name}
             </h1>
-            <p className="text-3xl font-black font-heading text-gradient">
-              ₹{laptop.Price.toLocaleString()}
+            <p style={{ fontSize: "2rem", fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>
+              ₹{laptop.Price?.toLocaleString()}
             </p>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-3">
-            <button onClick={sendToCompare} className="btn-secondary text-sm">
-              <GitCompare className="h-4 w-4" /> Set to Compare
+          {/* Actions */}
+          <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+            <button onClick={sendToCompare} className="btn-secondary" style={{ fontSize: "0.8125rem" }}>
+              <GitCompare style={{ width: 14, height: 14 }} /> Compare
             </button>
             <button
               onClick={handleFav}
-              className={`btn-secondary text-sm ${isFavorited ? "border-pink-500/40 text-pink-400 bg-pink-500/8" : ""}`}
+              className="btn-secondary"
+              style={{
+                fontSize: "0.8125rem",
+                color: isFavorited ? "#FF3B30" : undefined,
+                borderColor: isFavorited ? "rgba(255,59,48,0.3)" : undefined,
+              }}
             >
-              <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-              {isFavorited ? "Favorited" : "Save"}
+              <Heart style={{ width: 14, height: 14 }} fill={isFavorited ? "#FF3B30" : "none"} />
+              {isFavorited ? "Saved" : "Save"}
             </button>
           </div>
         </div>
       </motion.div>
 
-      {/* ── Main Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Specs */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Hardware specs */}
+      {/* ── Body Grid ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.25rem" }} className="details-grid">
+
+        {/* Left: Specs + Highlights */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Hardware */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass rounded-3xl p-6 border border-violet-500/12"
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            style={{
+              background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-xl)", padding: "1.5rem", boxShadow: "var(--shadow-sm)",
+            }}
           >
-            <h2 className="font-heading text-lg font-bold text-white mb-5 flex items-center gap-2">
-              <Cpu className="h-5 w-5 text-violet-400" /> Hardware Specifications
+            <h2 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Cpu style={{ width: 16, height: 16, color: "var(--accent)" }} /> Hardware Specifications
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SpecRow
-                icon={Cpu} color="bg-gradient-to-br from-violet-600 to-violet-800"
-                label="Processor (CPU)" main={laptop.Processor_Name}
-                sub={`${laptop.Processor_Brand} · ${laptop.CPU_Tier} · ${laptop.Ghz} GHz`}
-              />
-              <SpecRow
-                icon={Sparkles} color="bg-gradient-to-br from-cyan-600 to-cyan-800"
-                label="Graphics (GPU)" main={laptop.GPU}
-                sub={`${laptop.GPU_Brand} · ${laptop.GPU_VRAM_GB > 0 ? `${laptop.GPU_VRAM_GB} GB Dedicated` : "Integrated"}`}
-              />
-              <SpecRow
-                icon={MemoryStick} color="bg-gradient-to-br from-pink-600 to-pink-800"
-                label="Memory (RAM)" main={`${laptop.RAM_GB} GB`}
-                sub={laptop.RAM_TYPE}
-              />
-              <SpecRow
-                icon={HardDrive} color="bg-gradient-to-br from-amber-600 to-orange-700"
-                label="Storage" main={`${laptop.Storage_GB} GB Total`}
-                sub={`SSD: ${laptop.SSD_GB} GB · HDD: ${laptop.HDD_GB} GB`}
-              />
-              <SpecRow
-                icon={Monitor} color="bg-gradient-to-br from-emerald-600 to-emerald-800"
-                label="Display" main={`${laptop.Display_Size?.toFixed(1)}" ${laptop.Display_type}`}
-                sub="Widescreen · 16:9 Aspect Ratio"
-              />
-              <SpecRow
-                icon={Battery} color="bg-gradient-to-br from-teal-600 to-teal-800"
-                label="Battery & Power" main={`${laptop.Battery_Hours?.toFixed(1)} Hours`}
-                sub={`Adapter: ${laptop.Adapter_W > 0 ? `${laptop.Adapter_W} W` : "Standard"}`}
-              />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
+              <SpecRow icon={Cpu} color="#0071E3" label="Processor"
+                main={laptop.Processor_Name}
+                sub={`${laptop.Processor_Brand} · ${laptop.CPU_Tier} · ${laptop.Ghz} GHz`} />
+              <SpecRow icon={Sparkles} color="#AF52DE" label="Graphics"
+                main={laptop.GPU}
+                sub={`${laptop.GPU_Brand} · ${laptop.GPU_VRAM_GB > 0 ? `${laptop.GPU_VRAM_GB} GB Dedicated` : "Integrated"}`} />
+              <SpecRow icon={MemoryStick} color="#FF3B30" label="Memory"
+                main={`${laptop.RAM_GB} GB`} sub={laptop.RAM_TYPE} />
+              <SpecRow icon={HardDrive} color="#FF9F0A" label="Storage"
+                main={`${laptop.Storage_GB} GB Total`}
+                sub={`SSD: ${laptop.SSD_GB} GB · HDD: ${laptop.HDD_GB} GB`} />
+              <SpecRow icon={Monitor} color="#34C759" label="Display"
+                main={`${laptop.Display_Size?.toFixed(1)}" ${laptop.Display_type}`}
+                sub="Widescreen · 16:9 Aspect" />
+              <SpecRow icon={Battery} color="#5856D6" label="Battery"
+                main={`${laptop.Battery_Hours?.toFixed(1)} Hours`}
+                sub={`Adapter: ${laptop.Adapter_W > 0 ? `${laptop.Adapter_W} W` : "Standard"}`} />
             </div>
           </motion.div>
 
           {/* Highlights */}
           {laptop.Highlights?.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass rounded-3xl p-6 border border-violet-500/12"
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              style={{
+                background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-xl)", padding: "1.5rem", boxShadow: "var(--shadow-sm)",
+              }}
             >
-              <h2 className="font-heading text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-emerald-400" /> Product Highlights
+              <h2 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <CheckCircle2 style={{ width: 16, height: 16, color: "#34C759" }} /> Product Highlights
               </h2>
-              <ul className="space-y-2.5">
+              <ul style={{ display: "flex", flexDirection: "column", gap: "0.625rem", listStyle: "none", padding: 0, margin: 0 }}>
                 {laptop.Highlights.map((h, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                    <span className="text-violet-400 mt-0.5 shrink-0 text-base leading-none">›</span>
+                  <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "0.625rem", fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                    <span style={{ color: "var(--accent)", flexShrink: 0, fontWeight: 700, marginTop: 1 }}>›</span>
                     {h}
                   </li>
                 ))}
@@ -251,57 +263,69 @@ export default function LaptopDetails() {
         </div>
 
         {/* Right: Performance */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Radar chart */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Radar + Score bars */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="glass rounded-3xl p-6 border border-violet-500/12"
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+            style={{
+              background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-xl)", padding: "1.5rem", boxShadow: "var(--shadow-sm)",
+            }}
           >
-            <h2 className="font-heading text-lg font-bold text-white mb-1 text-center">
+            <h2 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", textAlign: "center", marginBottom: "0.25rem" }}>
               Performance Radar
             </h2>
-            <p className="text-xs text-slate-500 text-center mb-5">AI-computed benchmark scores / 100</p>
-
-            <div className="h-56 w-full">
+            <p style={{ fontSize: "0.75rem", color: "var(--text-tertiary)", textAlign: "center", marginBottom: "1rem" }}>
+              AI-computed benchmark scores / 100
+            </p>
+            <div style={{ height: 220 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                  <PolarGrid stroke="rgba(139,92,246,0.12)" />
-                  <PolarAngleAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 10, fontFamily: "Outfit" }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#374151", fontSize: 8 }} stroke="rgba(255,255,255,0.04)" />
-                  <Radar name="Scores" dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} strokeWidth={2} />
+                  <PolarGrid stroke="var(--border-medium)" />
+                  <PolarAngleAxis dataKey="name" tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "var(--text-tertiary)", fontSize: 8 }} stroke="var(--border-subtle)" />
+                  <Radar name="Scores" dataKey="score" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.15} strokeWidth={2} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Score bars */}
-            <div className="mt-6 space-y-3">
-              <ScoreBar label="Programming"   value={laptop.Programming_Score}    color="bg-gradient-to-r from-blue-500 to-indigo-500"   delay={0.3} />
-              <ScoreBar label="AI Dev"        value={laptop.AI_Development_Score} color="bg-gradient-to-r from-violet-500 to-purple-500"  delay={0.35} />
-              <ScoreBar label="Gaming"        value={laptop.Gaming_Score}         color="bg-gradient-to-r from-red-500 to-rose-500"       delay={0.4} />
-              <ScoreBar label="Video Editing" value={laptop.Video_Editing_Score}  color="bg-gradient-to-r from-pink-500 to-fuchsia-500"   delay={0.45} />
-              <ScoreBar label="Office/Study"  value={laptop.Office_Student_Score} color="bg-gradient-to-r from-emerald-500 to-teal-500"   delay={0.5} />
-              <ScoreBar label="Portability"   value={laptop.Portability_Score}    color="bg-gradient-to-r from-amber-500 to-yellow-500"   delay={0.55} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", marginTop: "1.25rem" }}>
+              <ScoreBar label="Programming"   value={laptop.Programming_Score}    accent="#0071E3"  delay={0.3} />
+              <ScoreBar label="AI Dev"        value={laptop.AI_Development_Score} accent="#AF52DE" delay={0.35} />
+              <ScoreBar label="Gaming"        value={laptop.Gaming_Score}         accent="#FF3B30"  delay={0.4} />
+              <ScoreBar label="Video Editing" value={laptop.Video_Editing_Score}  accent="#FF9F0A"  delay={0.45} />
+              <ScoreBar label="Office/Study"  value={laptop.Office_Student_Score} accent="#34C759"  delay={0.5} />
+              <ScoreBar label="Portability"   value={laptop.Portability_Score}    accent="#5856D6"  delay={0.55} />
             </div>
 
-            <p className="text-[10px] text-slate-600 mt-6 text-center leading-relaxed border-t border-white/5 pt-4">
+            <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", marginTop: "1rem", textAlign: "center", lineHeight: 1.5 }}>
               Portability is a screen-size proxy. Battery is imputed from price medians when raw data is invalid.
             </p>
           </motion.div>
 
-          {/* Quick compare CTA */}
+          {/* Compare CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="glass rounded-3xl p-5 border border-cyan-500/15 text-center"
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            style={{
+              background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-xl)", padding: "1.5rem", boxShadow: "var(--shadow-sm)",
+              textAlign: "center",
+            }}
           >
-            <GitCompare className="h-8 w-8 text-cyan-400 mx-auto mb-3" />
-            <h3 className="font-heading font-bold text-white mb-1.5">Compare this laptop</h3>
-            <p className="text-xs text-slate-500 mb-4">Add it to the compare tool and pick another to see side-by-side specs.</p>
-            <button onClick={sendToCompare} className="btn-primary text-sm w-full justify-center">
-              <GitCompare className="h-4 w-4" /> Open Compare Tool
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, margin: "0 auto 0.875rem",
+              background: "var(--accent-muted)", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <GitCompare style={{ width: 20, height: 20, color: "var(--accent)" }} />
+            </div>
+            <h3 style={{ fontWeight: 700, fontSize: "0.9375rem", color: "var(--text-primary)", marginBottom: "0.375rem" }}>
+              Compare this laptop
+            </h3>
+            <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.55 }}>
+              Add it to the compare tool and pick another for a side-by-side spec analysis.
+            </p>
+            <button onClick={sendToCompare} className="btn-primary" style={{ width: "100%", fontSize: "0.875rem" }}>
+              <GitCompare style={{ width: 15, height: 15 }} /> Open Compare Tool
             </button>
           </motion.div>
         </div>
