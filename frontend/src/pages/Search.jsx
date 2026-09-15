@@ -51,7 +51,7 @@ function LaptopCard({ laptop, isFav, onFav, onCompare }) {
 
         {/* Price */}
         <p style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--accent)", marginBottom: "0.875rem", marginTop: "0.5rem" }}>
-          ₹{laptop.Price.toLocaleString()}
+          RS {laptop.Price.toLocaleString()}
         </p>
 
         {/* Spec chips */}
@@ -125,7 +125,7 @@ function FilterPanel({ filters, meta, onChange, onReset }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       {/* Price Range */}
       <div>
-        <label className="form-label">Price Range (₹)</label>
+        <label className="form-label">Price Range (RS)</label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
           <input
             type="number" placeholder="Min" value={filters.price_min || ""}

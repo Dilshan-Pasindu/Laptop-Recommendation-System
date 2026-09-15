@@ -154,7 +154,7 @@ function ResultCard({ laptop, rank }) {
           {laptop.Name}
         </h3>
         <p style={{ fontSize: "1.375rem", fontWeight: 800, color: "var(--accent)", marginBottom: "1rem" }}>
-          ₹{laptop.Price?.toLocaleString()}
+          RS {laptop.Price?.toLocaleString()}
         </p>
 
         {/* Spec chips */}
@@ -213,7 +213,7 @@ function ResultCard({ laptop, rank }) {
    RECOMMEND PAGE
 ════════════════════════════════════════════════════════════ */
 const DEFAULTS = {
-  budget: 80000, purpose: "Programming",
+  budget: 275000, purpose: "Programming",
   brand: "Any", processor_brand: "Any", min_ram: 8,
   min_storage: 256, gpu_req: "Any", battery_importance: "Medium",
   display_size: "Any", display_type: "Any", performance_priority: 0.5,
@@ -292,8 +292,8 @@ export default function Recommend() {
                 Budget & Performance
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
-                <SliderField label="Budget" value={prefs.budget} min={10000} max={500000} step={5000}
-                  format={(v) => `₹${(v/1000).toFixed(0)}K`} onChange={(v) => set("budget", v)} />
+                <SliderField label="Budget" value={prefs.budget} min={30000} max={1800000} step={10000}
+                  format={(v) => `RS ${(v/1000).toFixed(0)}K`} onChange={(v) => set("budget", v)} />
                 <SliderField label="Performance Priority" value={prefs.performance_priority} min={0} max={1} step={0.05}
                   format={(v) => v <= 0.3 ? "Value" : v <= 0.6 ? "Balanced" : "Performance"}
                   onChange={(v) => set("performance_priority", v)} />
