@@ -1,6 +1,7 @@
 # Environments
 venv/
 backend/venv/
+backend/backend
 env/
 .env
 
