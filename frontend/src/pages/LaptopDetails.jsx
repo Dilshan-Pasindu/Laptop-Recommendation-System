@@ -176,7 +176,7 @@ export default function LaptopDetails() {
               {laptop.Name}
             </h1>
             <p style={{ fontSize: "2rem", fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>
-              ₹{laptop.Price?.toLocaleString()}
+              RS {laptop.Price?.toLocaleString()}
             </p>
           </div>
 

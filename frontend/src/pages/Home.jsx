@@ -182,7 +182,7 @@ function HeroVisual() {
               MacBook Pro 14" (M3 Pro)
             </div>
             <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-              Apple · ₹1,99,900
+              Apple · RS 687,656
             </div>
           </div>
 
