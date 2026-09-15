@@ -1,8 +1,14 @@
 import os
+import sys
 import joblib
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+
+# Ensure project root is in sys.path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 from backend.preprocessing import preprocess_dataset
 from backend.feature_engineering import engineer_features

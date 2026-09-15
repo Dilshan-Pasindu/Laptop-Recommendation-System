@@ -98,8 +98,8 @@ def get_laptops(
             "processor_brands": eng.get_processor_brands(),
             "display_types": ["LED", "LCD"],
             "purposes": ["Programming", "AI Development", "Gaming", "Video Editing", "Student", "Office"],
-            "min_price": float(eng.df["Price"].min()) if eng.df is not None else 7990,
-            "max_price": float(eng.df["Price"].max()) if eng.df is not None else 503890
+            "min_price": float(eng.df["Price"].min()) if eng.df is not None else 27500,
+            "max_price": float(eng.df["Price"].max()) if eng.df is not None else 1733000
         }
         return results
     except Exception as e:
