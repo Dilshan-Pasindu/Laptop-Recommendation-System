@@ -134,8 +134,8 @@ def engineer_features(df):
     # Battery hours, lower price (budget friendly), and portability are key.
     # We define a budget score (higher score for lower price)
     max_price = df["Price"].max()
-    # Normalize budget: log scaling or capping. Let's say under ₹100,000 is good, under ₹50,000 is great.
-    df["Budget_Score"] = df["Price"].apply(lambda p: max(10, min(100, (1 - min(p, 120000) / 120000) * 90 + 10)))
+    # Normalize budget: log scaling or capping. Let's say under RS 344,000 is good, under RS 172,000 is great.
+    df["Budget_Score"] = df["Price"].apply(lambda p: max(10, min(100, (1 - min(p, 412800) / 412800) * 90 + 10)))
     df["Battery_Score"] = df["Battery_Hours"].apply(lambda h: min(100, (h / 15) * 100))
     
     df["Office_Student_Score"] = (

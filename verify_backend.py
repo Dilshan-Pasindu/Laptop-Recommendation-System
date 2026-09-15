@@ -32,7 +32,7 @@ def run_tests():
     # 3. Test Recommendation Engine
     print("\nTesting Recommendation Logic...")
     test_prefs = {
-        "budget": 80000,
+        "budget": 275000,
         "purpose": "Gaming",
         "brand": "ASUS",
         "processor_brand": "Intel",
@@ -52,7 +52,7 @@ def run_tests():
         return False
         
     for i, r in enumerate(recs):
-        print(f"Rank {i+1}: {r['Brand']} {r['Name']} (Match: {r['Match_Percentage']}% | Price: ₹{r['Price']:,})")
+        print(f"Rank {i+1}: {r['Brand']} {r['Name']} (Match: {r['Match_Percentage']}% | Price: RS {r['Price']:,})")
         print(f"  CPU Score: {r['CPU_Score']} | GPU Score: {r['GPU_Score']} | Gaming Score: {r['Gaming_Score']}")
         print(f"  Why Recommended: {r['Why_Recommended'][0]}")
         

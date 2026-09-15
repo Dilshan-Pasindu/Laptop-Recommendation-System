@@ -55,7 +55,7 @@ class RecommendationEngine:
         """
         preferences is a dict:
         {
-            "budget": 75000,
+            "budget": 250000,
             "purpose": "Gaming", # Programming, AI Development, Gaming, Video Editing, Student, Office
             "brand": "Any", # Specific brand name or "Any"
             "processor_brand": "Any", # Intel, AMD, Apple, etc.
@@ -71,7 +71,7 @@ class RecommendationEngine:
         if self.df is None:
             return []
             
-        budget = preferences.get("budget", 150000)
+        budget = preferences.get("budget", 500000)
         purpose = preferences.get("purpose", "Programming")
         pref_brand = preferences.get("brand", "Any")
         pref_proc = preferences.get("processor_brand", "Any")
@@ -291,9 +291,9 @@ class RecommendationEngine:
             
             # Budget
             if row["Price"] <= budget:
-                reasons.append(f"Fits your budget (₹{int(row['Price']):,} is within your ₹{int(budget):,} limit)")
+                reasons.append(f"Fits your budget (RS {int(row['Price']):,} is within your RS {int(budget):,} limit)")
             else:
-                reasons.append(f"Worth the stretch: {row['Brand']} specs justify the ₹{int(row['Price'] - budget):,} budget overrun")
+                reasons.append(f"Worth the stretch: {row['Brand']} specs justify the RS {int(row['Price'] - budget):,} budget overrun")
                 
             # Purpose Score check
             purp_score = row[purpose_col_map.get(purpose, "Programming_Score")]

@@ -217,6 +217,9 @@ def preprocess_dataset(raw_path, clean_path):
     # Name cleaning
     df["Name_Clean"] = df["Name"].apply(clean_name)
     
+    # Convert Price from Indian Rupees (₹) to Sri Lankan Rupees (RS): 1 ₹ = 3.44 RS
+    df["Price"] = (df["Price"] * 3.44).round().astype(int)
+    
     # Parse core numerical specs
     df["RAM_GB"] = df["RAM"].apply(parse_ram)
     df["RAM_Expandable_GB"] = df["RAM_Expandable"].apply(parse_ram_expandable)
