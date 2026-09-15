@@ -31,8 +31,9 @@ class FavoriteRequest(BaseModel):
     laptop_id: int
 
 # --- FILE PATHS FOR BACKEND STORAGE ---
-FAVORITES_FILE = "backend/data/favorites.json"
-HISTORY_FILE = "backend/data/history.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FAVORITES_FILE = os.path.join(BASE_DIR, "data", "favorites.json")
+HISTORY_FILE = os.path.join(BASE_DIR, "data", "history.json")
 
 def load_json_file(file_path, default_val):
     if not os.path.exists(file_path):
