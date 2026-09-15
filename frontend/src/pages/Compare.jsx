@@ -36,7 +36,7 @@ function LaptopSlot({ slotNum, laptop, query, setQuery, results, showDropdown, o
               {laptop.Name}
             </h4>
             <p style={{ fontSize: "1.125rem", fontWeight: 800, color: accentColor }}>
-              ₹{laptop.Price?.toLocaleString()}
+              RS {laptop.Price?.toLocaleString()}
             </p>
           </div>
           <button onClick={onClear} className="btn-icon" style={{ flexShrink: 0 }}>
@@ -92,7 +92,7 @@ function LaptopSlot({ slotNum, laptop, query, setQuery, results, showDropdown, o
                       {item.Name}
                     </span>
                     <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0 }}>
-                      ₹{item.Price?.toLocaleString()}
+                      RS {item.Price?.toLocaleString()}
                     </span>
                   </button>
                 ))}
