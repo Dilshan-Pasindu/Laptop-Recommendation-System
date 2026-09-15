@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Ensure project root is in sys.path so 'backend.*' imports succeed regardless of CWD
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes import router
